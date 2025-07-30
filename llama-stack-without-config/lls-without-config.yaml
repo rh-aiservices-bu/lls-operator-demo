@@ -1,0 +1,23 @@
+apiVersion: llamastack.io/v1alpha1
+kind: LlamaStackDistribution
+metadata:
+  name: llamastack-without-config
+spec:
+  replicas: 1
+  server:
+    containerSpec:
+      env:
+        - name: VLLM_URL
+          value: 'https://llama32-3b/v1'
+        - name: INFERENCE_MODEL
+          value: llama32-3b
+        - name: MILVUS_DB_PATH
+          value: ~/.llama/milvus.db
+        - name: VLLM_TLS_VERIFY
+          value: 'false'
+        - name: FMS_ORCHESTRATOR_URL
+          value: 'http://localhost:1234'
+      name: llama-stack
+      port: 8321
+    distribution:
+      name: remote-vllm

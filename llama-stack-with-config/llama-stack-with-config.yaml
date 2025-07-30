@@ -1,0 +1,17 @@
+apiVersion: llamastack.io/v1alpha1
+kind: LlamaStackDistribution
+metadata:
+  name: llamastack-with-config
+spec:
+  replicas: 1
+  server:
+    containerSpec:
+      env:
+        - name: OTEL_SERVICE_NAME
+          value: llamastack
+      name: llama-stack
+      port: 8321
+    distribution:
+      name: remote-vllm
+    userConfig:
+      configMapName: llama-stack-config
