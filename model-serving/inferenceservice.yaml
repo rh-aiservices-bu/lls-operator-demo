@@ -2,11 +2,8 @@ apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
   annotations:
-    openshift.io/display-name: llama3.2-3b
-    serving.knative.openshift.io/enablePassthrough: 'true'
-    sidecar.istio.io/inject: 'true'
-    sidecar.istio.io/rewriteAppHTTPProbers: 'true'
-    argocd.argoproj.io/sync-wave: "2"
+    openshift.io/display-name: llama32-3b
+    serving.kserve.io/deploymentMode: RawDeployment
   name: llama32-3b
   labels:
     opendatahub.io/dashboard: 'true'

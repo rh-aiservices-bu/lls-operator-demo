@@ -40,7 +40,7 @@ spec:
             - name: STREAMLIT_SERVER_PORT
               value: "8501"
             - name: LLAMA_STACK_ENDPOINT
-              value: "http://llamastack-with-config-service:8321"
+              value: "http://llamastack-service:8321"
             - name: DEFAULT_MODEL
               value: "llama32-3b"
           livenessProbe:

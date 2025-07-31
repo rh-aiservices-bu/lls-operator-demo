@@ -5,3 +5,5 @@ resources:
   - openshift-rolebinding.yaml
   - openshift-service.yaml
   - openshift-serviceaccount.yaml
+
+namespace: lls-demo

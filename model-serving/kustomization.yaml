@@ -4,3 +4,5 @@ resources:
   - inferenceservice.yaml
   - oci-data-connection.yaml
   - servingruntime.yaml
+
+namespace: lls-demo

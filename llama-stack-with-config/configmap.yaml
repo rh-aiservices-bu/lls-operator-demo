@@ -21,7 +21,7 @@ data:
       - provider_id: vllm
         provider_type: remote::vllm
         config:
-          url: "https://llama32-3b.llama-serve.svc.cluster.local/v1"
+          url: "http://llama32-3b-predictor:8080/v1"
           tls_verify: false
           #max_tokens: 12000
           #api_token: fake
@@ -127,7 +127,7 @@ data:
       provider_id: model-context-protocol
       mcp_endpoint:
         uri: http://ocp-mcp-server:8000/sse
-    - toolgroup_id: mcp::github
-      provider_id: model-context-protocol
-      mcp_endpoint:
-        uri: http://github-mcp-server:80/sse
+    # - toolgroup_id: mcp::slack
+    #   provider_id: model-context-protocol
+    #   mcp_endpoint:
+    #     uri: "http://slack-mcp-server:80/sse"

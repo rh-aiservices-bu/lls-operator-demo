@@ -7,7 +7,6 @@ metadata:
     opendatahub.io/template-display-name: vLLM ServingRuntime for KServe
     opendatahub.io/template-name: vllm-runtime
     openshift.io/display-name: llama32-3b
-    argocd.argoproj.io/sync-wave: "1"
   name: llama32-3b
   labels:
     opendatahub.io/dashboard: 'true'
@@ -21,6 +20,7 @@ spec:
         - '--model=/mnt/models'
         - '--served-model-name={{.Name}}'
         - '--enable-auto-tool-choice'
+        - '--enable-chunked-prefill'
         - '--tool-call-parser'
         - llama3_json
         - '--chat-template'
