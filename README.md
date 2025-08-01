@@ -21,17 +21,28 @@ Deploy the components in the following order:
    kubectl apply -k model-serving/
    ```
 
-4. **Deploy MCP Servers** (Model Context Protocol servers):
+4. **Deploy Llama Guard** (Llama Guard safety model serving):
+   ```bash
+   kubectl apply -k llama-guard/
+   ```
+
+5. **Deploy MCP Servers** (Model Context Protocol servers):
    ```bash
    kubectl apply -k mcp-servers/openshift-mcp/
    ```
 
-5. **Deploy Llama Stack with Configuration** (using ConfigMap):
+6. **Deploy Llama Stack with Configuration** (using ConfigMap):
    ```bash
    kubectl apply -k llama-stack-with-config/
    ```
 
-6. **Deploy Llama Stack Playground** (development/testing instance):
+7. **Deploy Llama Stack Playground** (development/testing instance):
    ```bash
    kubectl apply -k llama-stack-playground/
    ```
+
+## Prompts
+
+```
+give me the kubernetes services in the lls-demo namespace
+```

@@ -3,10 +3,10 @@
 
 NAMESPACE = lls-demo
 
-.PHONY: all create-namespace deploy-operator deploy-model-serving deploy-mcp-servers deploy-llama-stack deploy-playground clean help
+.PHONY: all create-namespace deploy-operator deploy-model-serving deploy-llama-guard deploy-mcp-servers deploy-llama-stack deploy-playground clean help
 
 # Default target - deploy everything
-all: create-namespace deploy-operator deploy-model-serving deploy-mcp-servers deploy-llama-stack deploy-playground
+all: create-namespace deploy-operator deploy-model-serving deploy-llama-guard deploy-mcp-servers deploy-llama-stack deploy-playground
 	@echo "✅ All components deployed successfully!"
 
 # Create the target namespace
@@ -23,6 +23,11 @@ deploy-operator:
 deploy-model-serving:
 	@echo "🤖 Deploying Model Serving..."
 	kubectl apply -k model-serving/
+
+# Deploy Llama Guard (Llama Guard safety model serving)
+deploy-llama-guard:
+	@echo "🛡️ Deploying Llama Guard..."
+	kubectl apply -k llama-guard/
 
 # Deploy MCP Servers (Model Context Protocol servers)
 deploy-mcp-servers:
@@ -47,6 +52,7 @@ clean:
 	kubectl delete -k llama-stack-with-config/ --ignore-not-found=true
 	kubectl delete -k mcp-servers/slack-mcp/ --ignore-not-found=true
 	kubectl delete -k mcp-servers/openshift-mcp/ --ignore-not-found=true
+	kubectl delete -k llama-guard/ --ignore-not-found=true
 	kubectl delete -k model-serving/ --ignore-not-found=true
 	kubectl delete -k llama-stack-operator/ --ignore-not-found=true
 	kubectl delete namespace $(NAMESPACE) --ignore-not-found=true
@@ -61,6 +67,7 @@ help:
 	@echo "  make create-namespace Create the lls-demo namespace"
 	@echo "  make deploy-operator  Deploy Llama Stack Operator"
 	@echo "  make deploy-model-serving Deploy Model Serving"
+	@echo "  make deploy-llama-guard Deploy Llama Guard"
 	@echo "  make deploy-mcp-servers Deploy MCP Servers"
 	@echo "  make deploy-llama-stack Deploy Llama Stack with Configuration"
 	@echo "  make deploy-playground Deploy Llama Stack Playground"

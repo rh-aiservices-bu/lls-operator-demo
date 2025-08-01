@@ -2,6 +2,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: llama-stack-config
+  namespace: lls-demo
 data:
   run.yaml: |
     version: '2'
@@ -23,12 +24,19 @@ data:
         config:
           url: "http://llama32-3b-predictor:8080/v1"
           tls_verify: false
+          api_token: ${env.VLLM_API_TOKEN:fake}
           #max_tokens: 12000
-          #api_token: fake
           #tls_verify: false
       - provider_id: sentence-transformers
         provider_type: inline::sentence-transformers
         config: {}
+      - provider_id: vllm-safety
+        provider_type: remote::vllm
+        config:
+          url: ${env.SAFETY_MODEL:http://llama-guard-3-1b-predictor:8080/v1}
+          max_tokens: ${env.VLLM_MAX_TOKENS:4096}
+          api_token: ${env.VLLM_API_TOKEN:fake}
+          tls_verify: ${env.VLLM_TLS_VERIFY:false}
       agents:
       - provider_id: meta-reference
         provider_type: inline::meta-reference
@@ -69,6 +77,11 @@ data:
           kvstore:
             type: sqlite
             db_path: ${env.SQLITE_STORE_DIR:=~/.llama/distributions/starter}/faiss_store.db
+      safety:
+      - provider_id: llama-guard
+        provider_type: inline::llama-guard
+        config:
+          excluded_categories: []
       scoring:
       - provider_id: basic
         provider_type: inline::basic
@@ -114,10 +127,17 @@ data:
       model_id: all-MiniLM-L6-v2
       provider_id: sentence-transformers
       model_type: embedding
+    - metadata: {}
+      model_id: ${env.SAFETY_MODEL:llama-guard-3-1b}
+      #provider_model_id: ${env.SAFETY_MODEL:llama-guard-3-1b}
+      provider_id: vllm-safety
+      model_type: llm
     datasets: []
     vector_dbs: []
     scoring_fns: []
     benchmarks: []
+    shields:
+    - shield_id: ${env.SAFETY_MODEL:llama-guard-3-1b}
     tool_groups:
     - provider_id: tavily-search
       toolgroup_id: builtin::websearch
