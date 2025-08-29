@@ -12,6 +12,6 @@ spec:
       name: llama-stack
       port: 8321
     distribution:
-      name: remote-vllm
+      name: rh-dev
     userConfig:
       configMapName: llama-stack-config
