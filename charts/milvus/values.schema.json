@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Milvus Vector Database Helm Chart Values Schema",
+  "description": "Schema for validating values.yaml configuration for the Milvus Helm chart",
+  "properties": {
+    "milvus": {
+      "type": "object",
+      "description": "Milvus configuration",
+      "properties": {
+        "cluster": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable cluster mode"
+            }
+          }
+        },
+        "etcd": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable external etcd"
+            }
+          }
+        },
+        "pulsarv3": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable Pulsar v3"
+            }
+          }
+        },
+        "minio": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable external MinIO"
+            },
+            "tls": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Enable TLS for MinIO"
+                }
+              }
+            }
+          }
+        },
+        "extraConfigFiles": {
+          "type": "object",
+          "description": "Extra configuration files",
+          "properties": {
+            "user.yaml": {
+              "type": "string",
+              "description": "User configuration YAML"
+            }
+          }
+        },
+        "attu": {
+          "type": "object",
+          "description": "Attu UI configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable Attu UI"
+            },
+            "route": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Enable OpenShift Route for Attu"
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": ["cluster", "etcd", "pulsarv3", "minio"]
+    }
+  },
+  "required": ["milvus"],
+  "additionalProperties": false
+}

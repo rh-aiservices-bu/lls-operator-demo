@@ -1,0 +1,235 @@
+{{- if .Values.configMap.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llama-stack-config
+  labels:
+    {{- include "llama-stack-operator-instance.labels" . | nindent 4 }}
+data:
+  run.yaml: |-
+    version: '2'
+    image_name: {{ .Values.distribution.imageName }}
+    apis:
+    - agents
+    - datasetio
+    - inference
+    {{- if .Values.safety.enabled }}
+    - safety
+    {{- end }}
+    - scoring
+    - tool_runtime
+    - vector_io
+    {{- if .Values.eval.enabled }}
+    - eval
+    {{- end }}
+    {{- if .Values.telemetry.enabled }}
+    - telemetry
+    {{- end }}
+    - files
+    providers:
+      inference:
+      {{- if .Values.localVllm.enabled }}
+      - provider_id: vllm-inference
+        provider_type: "remote::vllm"
+        config:
+          url: "${env.MODEL_URL}"
+          # max_tokens: 110000
+          # api_token: ${env.LLAMA_3_2_3B_API_TOKEN}
+          # tls_verify: true
+      {{- end }}
+      {{- if .Values.maas.enabled }}
+      - provider_id: maas
+        provider_type: remote::vllm
+        config:
+          url: ${env.VLLM_URL}
+          max_tokens: ${env.VLLM_MAX_TOKENS}
+          api_token: ${env.VLLM_API_TOKEN}
+          tls_verify: ${env.VLLM_TLS_VERIFY}
+      {{- end }}
+      {{- if .Values.rag.enabled }}
+      - provider_id: sentence-transformers
+        provider_type: inline::sentence-transformers
+        config: {}
+      {{- end }}
+      {{- if .Values.rag.enabled }}
+      vector_io:
+      {{- if .Values.rag.milvus.inline }}
+      - provider_id: milvus
+        provider_type: inline::milvus
+        config:
+          db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/milvus.db
+          kvstore:
+            type: sqlite
+            namespace: null
+            db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/milvus_registry.db
+      {{- end }}
+      {{- if .Values.rag.milvus.remote }}
+      - provider_id: milvus-remote
+        provider_type: remote::milvus
+        config:
+          uri: "http://{{ .Values.rag.milvus.service }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.rag.milvus.port }}"
+          token: {{ .Values.rag.milvus.token | quote }}
+          secure: false
+          consistency_level: "Strong"
+          kvstore:
+            type: sqlite
+            namespace: null
+            db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/milvus_remote_registry.db
+      {{- end }}
+      {{- end }}
+      {{- if .Values.safety.enabled }}
+      safety:
+        - provider_id: trustyai_fms
+          provider_type: remote::trustyai_fms
+          module: llama_stack_provider_trustyai_fms==0.2.2
+          config:
+            orchestrator_url: ${env.FMS_ORCHESTRATOR_URL:=}
+            ssl_cert_path: ${env.FMS_SSL_CERT_PATH:=}
+            shields: {}
+      {{- end }}
+      agents:
+      - provider_id: meta-reference
+        provider_type: inline::meta-reference
+        config:
+          persistence_store:
+            type: sqlite
+            namespace: null
+            db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/agents_store.db
+          responses_store:
+            type: sqlite
+            db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/responses_store.db
+      {{- if .Values.eval.enabled }}
+      eval:
+      - provider_id: trustyai_lmeval
+        provider_type: remote::trustyai_lmeval
+        module: llama_stack_provider_lmeval==0.2.4
+        config:
+            use_k8s: ${env.TRUSTYAI_LMEVAL_USE_K8S:=true}
+            base_url: ${env.VLLM_URL:=http://localhost:8000/v1}
+      datasetio:
+      - provider_id: huggingface
+        provider_type: remote::huggingface
+        config:
+          kvstore:
+            type: sqlite
+            namespace: null
+            db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/huggingface_datasetio.db
+      - provider_id: localfs
+        provider_type: inline::localfs
+        config:
+          kvstore:
+            type: sqlite
+            namespace: null
+            db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/localfs_datasetio.db
+      {{- end }}
+      scoring:
+      - provider_id: basic
+        provider_type: inline::basic
+        config: {}
+      - provider_id: llm-as-judge
+        provider_type: inline::llm-as-judge
+        config: {}
+      {{- if .Values.scoring.braintrust.enabled }}
+      - provider_id: braintrust
+        provider_type: inline::braintrust
+        config:
+          openai_api_key: ${env.OPENAI_API_KEY:=}
+      {{- end }}
+      {{- if .Values.telemetry.enabled }}
+      telemetry:
+      - provider_id: meta-reference
+        provider_type: inline::meta-reference
+        config:
+          service_name: "${env.OTEL_SERVICE_NAME:=​}"
+          sinks: ${env.TELEMETRY_SINKS:=console,sqlite}
+          sqlite_db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/trace_store.db
+          otel_exporter_otlp_endpoint: ${env.OTEL_EXPORTER_OTLP_ENDPOINT:=}
+      {{- end }}
+      tool_runtime:
+      - provider_id: brave-search
+        provider_type: remote::brave-search
+        config:
+          api_key: ${env.BRAVE_SEARCH_API_KEY:=}
+          max_results: 3
+      - provider_id: tavily-search
+        provider_type: remote::tavily-search
+        config:
+          api_key: ${env.TAVILY_SEARCH_API_KEY:=}
+          max_results: 3
+      {{- if .Values.rag.enabled }}
+      - provider_id: rag-runtime
+        provider_type: inline::rag-runtime
+        config: {}
+      {{- end }}
+      - provider_id: model-context-protocol
+        provider_type: remote::model-context-protocol
+        config: {}
+      files:
+      - provider_id: meta-reference-files
+        provider_type: inline::localfs
+        config:
+          storage_dir: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/files
+          metadata_store:
+            type: sqlite
+            db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/files_metadata.db
+    metadata_store:
+      type: sqlite
+      db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/registry.db
+    inference_store:
+      type: sqlite
+      db_path: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}/inference_store.db
+    models:
+    {{- if .Values.localVllm.enabled }}
+    - metadata: {}
+      model_id: ${env.MODEL_NAME}
+      provider_id: vllm-inference
+      model_type: llm
+    {{- end }}
+    {{- if .Values.maas.enabled }}
+    - metadata: {}
+      model_id: ${env.INFERENCE_MODEL}
+      provider_id: maas
+      model_type: llm
+    {{- end }}
+    {{- if .Values.rag.enabled }}
+    - metadata:
+        embedding_dimension: 768
+      model_id: granite-embedding-125m
+      provider_id: sentence-transformers
+      provider_model_id: ibm-granite/granite-embedding-125m-english
+      model_type: embedding
+    {{- end }}
+    shields: []
+    vector_dbs: []
+    datasets: []
+    scoring_fns: []
+    benchmarks: []
+    tool_groups:
+    - toolgroup_id: builtin::websearch
+      provider_id: tavily-search
+    {{- if .Values.rag.enabled }}
+    - toolgroup_id: builtin::rag
+      provider_id: rag-runtime
+    {{- end }}
+    {{- if .Values.mcpServers.weather.enabled }}
+    - toolgroup_id: mcp::weather
+      provider_id: model-context-protocol
+      mcp_endpoint:
+        uri: http://{{ .Values.mcpServers.weather.service }}.{{ .Values.mcpServers.weather.namespace }}.svc.cluster.local:{{ .Values.mcpServers.weather.port }}/sse
+    {{- end }}
+    {{- if .Values.mcpServers.slack.enabled }}
+    - toolgroup_id: mcp::slack
+      provider_id: model-context-protocol
+      mcp_endpoint:
+        uri: http://{{ .Values.mcpServers.slack.service }}.{{ .Values.mcpServers.slack.namespace }}.svc.cluster.local:{{ .Values.mcpServers.slack.port }}/sse
+    {{- end }}
+    {{- if .Values.mcpServers.openshift.enabled }}
+    - toolgroup_id: mcp::openshift
+      provider_id: model-context-protocol
+      mcp_endpoint:
+        uri: http://{{ .Values.mcpServers.openshift.service }}.{{ .Values.mcpServers.openshift.namespace }}.svc.cluster.local:{{ .Values.mcpServers.openshift.port }}/sse
+    {{- end }}
+    server:
+      port: 8321
+{{- end }}

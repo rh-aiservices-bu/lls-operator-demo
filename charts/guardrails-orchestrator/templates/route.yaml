@@ -1,0 +1,11 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: guardrails-orchestrator
+spec:
+  to:
+    kind: Service
+    name: guardrails-orchestrator
+  port:
+    targetPort: http

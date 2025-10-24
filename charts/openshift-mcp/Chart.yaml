@@ -1,0 +1,13 @@
+apiVersion: v2
+name: openshift-mcp
+description: OpenShift MCP Server - Kubernetes MCP server for managing OpenShift/K8s resources
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - mcp
+  - model-context-protocol
+  - openshift
+  - kubernetes
+maintainers:
+  - name: Red Hat AI BU

@@ -1,0 +1,39 @@
+# OpenShift MCP Server Configuration
+
+image:
+  repository: quay.io/hveeradh/ocp-mcp-server
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8000
+
+# SSE server port configuration
+ssePort: 8000
+
+# ServiceAccount and RBAC
+serviceAccount:
+  create: true
+  name: ocp-mcp
+
+rbac:
+  create: true
+  # ClusterRole to bind (default: edit)
+  clusterRole: edit
+
+resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

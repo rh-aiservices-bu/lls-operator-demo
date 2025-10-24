@@ -1,0 +1,14 @@
+apiVersion: v2
+name: llama32-3b
+description: Llama 3.2 3B model serving with vLLM runtime on KServe
+type: application
+version: 0.1.0
+appVersion: "3.2"
+keywords:
+  - llama
+  - llm
+  - vllm
+  - kserve
+  - inference
+maintainers:
+  - name: Red Hat AI BU

@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+description: A Helm chart for Guardrails Orchestrator 🔦
+name: guardrails-orchestrator
+type: application
+version: 1.0.0
+appVersion: "latest"
+icon: https://cdn-icons-png.freepik.com/512/5896/5896766.png

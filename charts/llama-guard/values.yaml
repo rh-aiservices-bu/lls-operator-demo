@@ -1,0 +1,74 @@
+# Llama Guard 3 1B Model Serving Configuration
+
+# Model configuration
+model:
+  name: llama-guard-3-1b
+  displayName: llama-guard-3-1b
+  storageUri: "oci://quay.io/rh-aiservices-bu/llama-guard-3-1b-modelcar:2.0.0"
+  servedModelName: "meta-llama/Llama-Guard-3-1B"
+
+# ServingRuntime configuration
+servingRuntime:
+  image: "quay.io/modh/vllm:rhoai-2.21-cuda"
+  port: 8080
+
+  # vLLM arguments
+  vllm:
+    maxModelLen: "6048"
+    dtype: "half"
+    enableChunkedPrefill: true
+    distributedExecutorBackend: "mp"
+
+  # Shared memory configuration
+  shm:
+    sizeLimit: 2Gi
+
+# InferenceService configuration
+inferenceService:
+  minReplicas: 1
+  maxReplicas: 1
+  automountServiceAccountToken: false
+
+  # Additional model args
+  modelArgs:
+    - '--served-model-name=meta-llama/Llama-Guard-3-1B'
+
+  # Resource limits and requests
+  resources:
+    limits:
+      cpu: "12"
+      memory: 64Gi
+      nvidia.com/gpu: "1"
+    requests:
+      cpu: "1"
+      memory: 1Gi
+      nvidia.com/gpu: "1"
+
+  # GPU tolerations
+  # Set to true for BU cluster with Tesla-T4-PRIVATE GPUs
+  buCluster: false
+
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+
+# Route configuration
+route:
+  create: true
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+
+# OCI Data Connection Secret
+dataConnection:
+  create: true
+  name: llama-guard-3-1b
+  displayName: llama-guard-3-1b
+  description: ""
+  # Base64 encoded URI (will be auto-encoded from model.storageUri if not set)
+  uri: ""
+
+# OpenDataHub labels
+labels:
+  dashboard: true

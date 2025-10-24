@@ -1,0 +1,46 @@
+{{- if .Values.orchestrator_gateway.enabled }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fms-orchestr8-config-gateway
+  labels:
+    app: fmstack-nlp
+data:
+  config.yaml: |
+    orchestrator:
+      host: "localhost"
+      port: 8032
+    detectors:
+      - name: regex_competitor
+        input: true
+        output: true
+        detector_params:
+          regex:
+            - '(?i).*fight club.*'
+      - name: hap
+        input: true
+        output: true
+        detector_params: {}
+      - name: prompt_injection
+        input: true
+        output: false
+        detector_params: {}
+      - name: language_detection
+        input: true
+        output: true
+        detector_params: {}
+    routes:
+      - name: all
+        detectors:
+          - regex_competitor
+          - hap
+          - prompt_injection
+          - language_detection
+      - name: hap
+        detectors:
+          - hap
+        fallback_message: "You know I can't let you ask me that."
+      - name: passthrough
+        detectors:
+{{- end }}

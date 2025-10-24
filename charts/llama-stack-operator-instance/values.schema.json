@@ -1,0 +1,355 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Llama Stack Operator Instance Helm Chart Values Schema",
+  "description": "Schema for validating values.yaml configuration for the Llama Stack Operator Instance Helm chart",
+  "properties": {
+    "MODEL_NAME": {
+      "type": "string",
+      "description": "Name of the model to use for inference",
+      "minLength": 1,
+      "default": "llama32",
+      "examples": [
+        "llama32",
+        "llama3.2",
+        "llama3.1"
+      ]
+    },
+    "MODEL_URL": {
+      "type": "string",
+      "description": "URL endpoint for the model inference service",
+      "pattern": "^https?://[^\\s]+$",
+      "default": "http://llama-32-predictor:8080/v1",
+      "examples": [
+        "http://llama-32-predictor:8080/v1",
+        "http://model-service:8080/v1"
+      ]
+    },
+    "localVllm": {
+      "type": "object",
+      "description": "Local vLLM inference provider configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable local vLLM inference provider",
+          "default": true
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "distribution": {
+      "type": "object",
+      "description": "Distribution configuration for Llama Stack",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Container image for the Llama Stack distribution",
+          "minLength": 1,
+          "default": "quay.io/rhoai-genaiops/llama-stack-vllm-milvus-fms:0.2.11",
+          "examples": [
+            "quay.io/rhoai-genaiops/llama-stack-vllm-milvus-fms:0.2.11",
+            "registry.example.com/llama-stack:latest"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "description": "Distribution name used in LlamaStackDistribution CR (e.g., 'rh-dev', 'vllm-prod')",
+          "minLength": 1,
+          "default": "rh-dev",
+          "examples": [
+            "rh-dev",
+            "rh-prod",
+            "vllm-dev"
+          ]
+        },
+        "imageName": {
+          "type": "string",
+          "description": "Image name used in run.yaml config and file paths (e.g., 'rh', 'vllm')",
+          "minLength": 1,
+          "default": "rh",
+          "examples": [
+            "rh",
+            "vllm",
+            "remote-vllm"
+          ]
+        }
+      },
+      "required": ["name", "imageName"],
+      "additionalProperties": false
+    },
+    "configMap": {
+      "type": "object",
+      "description": "ConfigMap configuration settings",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable ConfigMap creation",
+          "default": true
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "rag": {
+      "type": "object",
+      "description": "RAG (Retrieval-Augmented Generation) configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable RAG functionality (embeddings, milvus vector DB, rag-runtime)",
+          "default": true
+        },
+        "milvus": {
+          "type": "object",
+          "description": "Milvus vector database configuration",
+          "properties": {
+            "inline": {
+              "type": "boolean",
+              "description": "Enable inline (embedded) Milvus with SQLite backend",
+              "default": true
+            },
+            "remote": {
+              "type": "boolean",
+              "description": "Enable remote Milvus service connection",
+              "default": false
+            },
+            "service": {
+              "type": "string",
+              "description": "Milvus service name (for remote connection)",
+              "minLength": 1,
+              "default": "milvus",
+              "examples": ["milvus", "milvus-standalone"]
+            },
+            "port": {
+              "type": "integer",
+              "description": "Milvus service port",
+              "minimum": 1,
+              "maximum": 65535,
+              "default": 19530
+            },
+            "token": {
+              "type": "string",
+              "description": "Milvus authentication token (username:password)",
+              "default": "root:Milvus",
+              "examples": ["root:Milvus", "user:password"]
+            }
+          },
+          "required": ["inline", "remote", "service", "port", "token"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["enabled", "milvus"],
+      "additionalProperties": false
+    },
+    "safety": {
+      "type": "object",
+      "description": "Safety configuration for content guardrails via TrustyAI FMS",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable safety functionality (trustyai_fms safety provider)",
+          "default": false
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "eval": {
+      "type": "object",
+      "description": "Evaluation functionality configuration via TrustyAI LMEval",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable evaluation capabilities (trustyai_lmeval provider, datasetio providers)",
+          "default": true
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "telemetry": {
+      "type": "object",
+      "description": "Telemetry and observability configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable telemetry collection (OTEL integration)",
+          "default": false
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "scoring": {
+      "type": "object",
+      "description": "Scoring providers configuration",
+      "properties": {
+        "braintrust": {
+          "type": "object",
+          "description": "Braintrust scoring provider configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable or disable Braintrust scoring provider",
+              "default": false
+            }
+          },
+          "required": ["enabled"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["braintrust"],
+      "additionalProperties": false
+    },
+    "maas": {
+      "type": "object",
+      "description": "MaaS (Model as a Service) configuration for external LLM providers via Kubernetes secret",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable MaaS provider",
+          "default": false
+        },
+        "secretName": {
+          "type": "string",
+          "description": "Name of Kubernetes secret containing MaaS credentials (INFERENCE_MODEL, VLLM_URL, VLLM_TLS_VERIFY, VLLM_API_TOKEN)",
+          "minLength": 1,
+          "default": "llama-stack-inference-model-secret",
+          "examples": [
+            "llama-stack-inference-model-secret",
+            "maas-credentials"
+          ]
+        },
+        "maxTokens": {
+          "type": "integer",
+          "description": "Maximum number of tokens for model responses (VLLM_MAX_TOKENS env var)",
+          "minimum": 1,
+          "maximum": 1000000,
+          "default": 4096
+        }
+      },
+      "required": ["enabled", "secretName", "maxTokens"],
+      "additionalProperties": false
+    },
+    "mcpServers": {
+      "type": "object",
+      "description": "Model Context Protocol (MCP) server configurations for tool integrations",
+      "properties": {
+        "weather": {
+          "type": "object",
+          "description": "Weather MCP server configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable or disable weather MCP server",
+              "default": true
+            },
+            "service": {
+              "type": "string",
+              "description": "Kubernetes service name for weather MCP server",
+              "minLength": 1,
+              "default": "mcp-weather"
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Kubernetes namespace where weather MCP server is deployed",
+              "minLength": 1,
+              "default": "llama-serve"
+            },
+            "port": {
+              "type": "integer",
+              "description": "Service port for weather MCP server",
+              "minimum": 1,
+              "maximum": 65535,
+              "default": 80
+            }
+          },
+          "required": ["enabled", "service", "namespace", "port"],
+          "additionalProperties": false
+        },
+        "slack": {
+          "type": "object",
+          "description": "Slack MCP server configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable or disable Slack MCP server",
+              "default": false
+            },
+            "service": {
+              "type": "string",
+              "description": "Kubernetes service name for Slack MCP server",
+              "minLength": 1,
+              "default": "slack-mcp-server"
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Kubernetes namespace where Slack MCP server is deployed",
+              "minLength": 1,
+              "default": "llama-serve"
+            },
+            "port": {
+              "type": "integer",
+              "description": "Service port for Slack MCP server",
+              "minimum": 1,
+              "maximum": 65535,
+              "default": 80
+            }
+          },
+          "required": ["enabled", "service", "namespace", "port"],
+          "additionalProperties": false
+        },
+        "openshift": {
+          "type": "object",
+          "description": "OpenShift MCP server configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable or disable OpenShift MCP server",
+              "default": true
+            },
+            "service": {
+              "type": "string",
+              "description": "Kubernetes service name for OpenShift MCP server",
+              "minLength": 1,
+              "default": "ocp-mcp-server"
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Kubernetes namespace where OpenShift MCP server is deployed",
+              "minLength": 1,
+              "default": "llama-serve"
+            },
+            "port": {
+              "type": "integer",
+              "description": "Service port for OpenShift MCP server",
+              "minimum": 1,
+              "maximum": 65535,
+              "default": 8000
+            }
+          },
+          "required": ["enabled", "service", "namespace", "port"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["weather", "slack", "openshift"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "MODEL_NAME",
+    "MODEL_URL",
+    "localVllm",
+    "distribution",
+    "configMap",
+    "rag",
+    "safety",
+    "eval",
+    "telemetry",
+    "scoring",
+    "maas",
+    "mcpServers"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,64 @@
+# Llama Stack Operator Instance configuration
+MODEL_NAME: "llama32"
+MODEL_URL: "http://llama-32-predictor:8080/v1"
+
+# Local vLLM configuration
+localVllm:
+  enabled: true  # Enable local vLLM inference provider
+
+# Distribution configuration
+distribution:
+  #image: "quay.io/rhoai-genaiops/llama-stack-vllm-milvus-fms:0.2.11"
+  name: "rh-dev"  # Distribution name used in LlamaStackDistribution CR
+  imageName: "rh"  # Image name used in run.yaml config and file paths
+
+# ConfigMap for Llama Stack configuration
+configMap:
+  enabled: true
+
+# Feature toggles
+rag:
+  enabled: true  # Enable RAG (embeddings, milvus, rag-runtime)
+  milvus:
+    inline: true   # Use inline (embedded) Milvus with SQLite
+    remote: false  # Use remote Milvus service
+    service: "milvus"  # Milvus service name (for remote)
+    port: 19530    # Milvus service port
+    token: "root:Milvus"  # Default Milvus credentials
+
+safety:
+  enabled: true
+
+eval:
+  enabled: true  # Match working config default
+
+telemetry:
+  enabled: false
+
+scoring:
+  braintrust:
+    enabled: false
+
+# MaaS (Model as a Service) configuration
+maas:
+  enabled: false
+  secretName: "llama-stack-inference-model-secret"  # Kubernetes secret containing MaaS credentials
+  maxTokens: 400000  # VLLM_MAX_TOKENS (not stored in secret)
+
+# MCP (Model Context Protocol) Servers configuration
+mcpServers:
+  weather:
+    enabled: true
+    service: "mcp-weather"
+    namespace: "llama-serve"  # Namespace where MCP server is deployed
+    port: 80
+  slack:
+    enabled: false
+    service: "slack-mcp-server"
+    namespace: "llama-serve"
+    port: 80
+  openshift:
+    enabled: true
+    service: "ocp-mcp-server"
+    namespace: "llama-serve"
+    port: 8000

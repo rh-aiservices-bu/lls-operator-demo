@@ -1,0 +1,15 @@
+apiVersion: v2
+name: llama-guard
+description: Llama Guard 3 1B safety model serving with vLLM runtime on KServe
+type: application
+version: 0.1.0
+appVersion: "3.1"
+keywords:
+  - llama-guard
+  - safety
+  - llm
+  - vllm
+  - kserve
+  - inference
+maintainers:
+  - name: Red Hat AI BU

@@ -1,0 +1,33 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  annotations:
+    openshift.io/display-name: {{ .Values.model.displayName }}
+    serving.kserve.io/deploymentMode: RawDeployment
+  name: {{ .Values.model.name }}
+  labels:
+    {{- include "llama32-3b.labels" . | nindent 4 }}
+spec:
+  predictor:
+    maxReplicas: {{ .Values.inferenceService.maxReplicas }}
+    minReplicas: {{ .Values.inferenceService.minReplicas }}
+    model:
+      {{- with .Values.inferenceService.modelArgs }}
+      args:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      modelFormat:
+        name: {{ .Values.inferenceService.modelFormat }}
+      name: ''
+      resources:
+        {{- toYaml .Values.inferenceService.resources | nindent 8 }}
+      runtime: {{ .Values.model.name }}
+      storageUri: {{ .Values.model.storageUri | quote }}
+    tolerations:
+    {{- if .Values.inferenceService.buCluster }}
+      - effect: NoSchedule
+        key: nvidia.com/gpu
+        value: Tesla-T4-SHARED
+    {{- else }}
+      {{- toYaml .Values.inferenceService.tolerations | nindent 6 }}
+    {{- end }}

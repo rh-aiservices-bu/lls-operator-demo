@@ -1,0 +1,68 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  annotations:
+    opendatahub.io/accelerator-name: ''
+    opendatahub.io/apiProtocol: REST
+    opendatahub.io/template-display-name: vLLM
+    opendatahub.io/template-name: vllm
+    openshift.io/display-name: {{ .Values.model.displayName }}
+  name: {{ .Values.model.name }}
+  labels:
+    {{- include "llama32-3b.labels" . | nindent 4 }}
+spec:
+  {{- with .Values.servingRuntime.builtInAdapter }}
+  builtInAdapter:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  containers:
+    - args:
+        {{- if .Values.servingRuntime.vllm.dtype }}
+        - '--dtype={{ .Values.servingRuntime.vllm.dtype }}'
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.gpuMemoryUtilization }}
+        - '--gpu-memory-utilization={{ .Values.servingRuntime.vllm.gpuMemoryUtilization }}'
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.enableChunkedPrefill }}
+        - '--enable-chunked-prefill'
+        {{- end }}
+        - '--port={{ .Values.servingRuntime.port }}'
+        - '--model=/mnt/models'
+        - '--served-model-name={{ .Values.model.servedModelName }}'
+        {{- if .Values.servingRuntime.vllm.enableAutoToolChoice }}
+        - '--enable-auto-tool-choice'
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.toolCallParser }}
+        - '--tool-call-parser'
+        - {{ .Values.servingRuntime.vllm.toolCallParser }}
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.chatTemplate }}
+        - '--chat-template'
+        - {{ .Values.servingRuntime.vllm.chatTemplate }}
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.maxModelLen }}
+        - '--max-model-len'
+        - {{ .Values.servingRuntime.vllm.maxModelLen | quote }}
+        {{- end }}
+      {{- with .Values.servingRuntime.env }}
+      env:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      image: {{ .Values.servingRuntime.image }}
+      name: kserve-container
+      ports:
+        - containerPort: {{ .Values.servingRuntime.port }}
+          name: {{ .Values.servingRuntime.portName }}
+          protocol: TCP
+      volumeMounts:
+        - mountPath: /dev/shm
+          name: shm
+  multiModel: false
+  supportedModelFormats:
+    - autoSelect: true
+      name: {{ .Values.inferenceService.modelFormat }}
+  volumes:
+    - emptyDir:
+        medium: Memory
+        sizeLimit: {{ .Values.servingRuntime.shm.sizeLimit }}
+      name: shm

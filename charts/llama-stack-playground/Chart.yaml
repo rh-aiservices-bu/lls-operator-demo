@@ -1,0 +1,11 @@
+apiVersion: v2
+name: llama-stack-playground
+description: A Helm chart for Llama Stack Playground UI
+type: application
+version: 1.0.1
+appVersion: "latest"
+maintainers:
+  - name: ckavili
+  - name: rhrolun
+  - name: rcarrata
+icon: https://previews.123rf.com/images/eriek/eriek2007/eriek200700074/152273778-jumping-llama-cartoon-alpaca.jpg

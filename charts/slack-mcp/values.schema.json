@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Slack MCP Server Helm Chart Values Schema",
+  "description": "Schema for validating values.yaml configuration for the Slack MCP Server Helm chart",
+  "properties": {
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Container image repository",
+          "default": "quay.io/redhat-et/slack-mcp-server"
+        },
+        "tag": {
+          "type": "string",
+          "description": "Image tag",
+          "default": "latest"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "default": "Always"
+        }
+      },
+      "required": ["repository", "tag"]
+    },
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+          "default": "ClusterIP"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 80
+        },
+        "targetPort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 8080
+        }
+      }
+    },
+    "slack": {
+      "type": "object",
+      "description": "Slack API credentials",
+      "properties": {
+        "existingSecret": {
+          "type": "string",
+          "description": "Name of existing secret with Slack credentials"
+        },
+        "botToken": {
+          "type": "string",
+          "description": "Slack bot token (starts with xoxb-)",
+          "pattern": "^xoxb-",
+          "default": "xoxb-"
+        },
+        "teamId": {
+          "type": "string",
+          "description": "Slack team/workspace ID (starts with T)",
+          "pattern": "^T",
+          "default": "T..."
+        }
+      },
+      "required": ["botToken", "teamId"]
+    },
+    "resources": {
+      "type": "object"
+    },
+    "nodeSelector": {
+      "type": "object"
+    },
+    "tolerations": {
+      "type": "array"
+    },
+    "affinity": {
+      "type": "object"
+    }
+  },
+  "required": ["image", "slack"],
+  "additionalProperties": false
+}

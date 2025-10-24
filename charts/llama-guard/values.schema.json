@@ -1,0 +1,277 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Llama Guard 3 1B Safety Model Helm Chart Values Schema",
+  "description": "Schema for validating values.yaml configuration for the Llama Guard 3 1B safety model Helm chart",
+  "properties": {
+    "model": {
+      "type": "object",
+      "description": "Model configuration settings",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the model deployment",
+          "minLength": 1,
+          "default": "llama-guard-3-1b"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name for the model",
+          "minLength": 1,
+          "default": "llama-guard-3-1b"
+        },
+        "storageUri": {
+          "type": "string",
+          "description": "OCI storage URI for the model",
+          "pattern": "^oci://",
+          "default": "oci://quay.io/rh-aiservices-bu/llama-guard-3-1b-modelcar:2.0.0"
+        },
+        "servedModelName": {
+          "type": "string",
+          "description": "Name of the model as served by vLLM",
+          "minLength": 1,
+          "default": "meta-llama/Llama-Guard-3-1B"
+        }
+      },
+      "required": ["name", "displayName", "storageUri"],
+      "additionalProperties": false
+    },
+    "servingRuntime": {
+      "type": "object",
+      "description": "ServingRuntime configuration for vLLM",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Container image for vLLM runtime",
+          "minLength": 1,
+          "default": "quay.io/modh/vllm:rhoai-2.21-cuda"
+        },
+        "port": {
+          "type": "integer",
+          "description": "Port for the serving runtime",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 8080
+        },
+        "vllm": {
+          "type": "object",
+          "description": "vLLM-specific configuration",
+          "properties": {
+            "maxModelLen": {
+              "type": "string",
+              "description": "Maximum model context length",
+              "pattern": "^[0-9]+$",
+              "default": "6048"
+            },
+            "dtype": {
+              "type": "string",
+              "description": "Data type for model weights",
+              "enum": ["half", "float16", "bfloat16", "float32", "auto"],
+              "default": "half"
+            },
+            "enableChunkedPrefill": {
+              "type": "boolean",
+              "description": "Enable chunked prefill for better throughput",
+              "default": true
+            },
+            "distributedExecutorBackend": {
+              "type": "string",
+              "description": "Distributed executor backend",
+              "enum": ["ray", "mp"],
+              "default": "mp"
+            }
+          },
+          "additionalProperties": false
+        },
+        "shm": {
+          "type": "object",
+          "description": "Shared memory configuration",
+          "properties": {
+            "sizeLimit": {
+              "type": "string",
+              "description": "Shared memory size limit",
+              "pattern": "^[0-9]+(Mi|Gi)$",
+              "default": "2Gi"
+            }
+          },
+          "required": ["sizeLimit"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["image", "port"],
+      "additionalProperties": false
+    },
+    "inferenceService": {
+      "type": "object",
+      "description": "InferenceService configuration",
+      "properties": {
+        "minReplicas": {
+          "type": "integer",
+          "description": "Minimum number of replicas",
+          "minimum": 0,
+          "default": 1
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "default": 1
+        },
+        "automountServiceAccountToken": {
+          "type": "boolean",
+          "description": "Automount service account token",
+          "default": false
+        },
+        "modelArgs": {
+          "type": "array",
+          "description": "Additional model arguments",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource requirements",
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(m|)$"
+                },
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$"
+                },
+                "nvidia.com/gpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                }
+              }
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(m|)$"
+                },
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$"
+                },
+                "nvidia.com/gpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                }
+              }
+            }
+          }
+        },
+        "buCluster": {
+          "type": "boolean",
+          "description": "Enable BU cluster specific configuration (Tesla-T4-PRIVATE GPUs)",
+          "default": false
+        },
+        "tolerations": {
+          "type": "array",
+          "description": "Pod tolerations for GPU scheduling",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string",
+                "enum": ["Equal", "Exists"]
+              },
+              "value": {
+                "type": "string"
+              },
+              "effect": {
+                "type": "string",
+                "enum": ["NoSchedule", "PreferNoSchedule", "NoExecute"]
+              }
+            }
+          }
+        }
+      },
+      "required": ["minReplicas", "maxReplicas"],
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "description": "OpenShift Route configuration",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Create OpenShift Route",
+          "default": true
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "termination": {
+              "type": "string",
+              "enum": ["edge", "passthrough", "reencrypt"],
+              "default": "edge"
+            },
+            "insecureEdgeTerminationPolicy": {
+              "type": "string",
+              "enum": ["Redirect", "Allow", "None"],
+              "default": "Redirect"
+            }
+          }
+        }
+      },
+      "required": ["create"],
+      "additionalProperties": false
+    },
+    "dataConnection": {
+      "type": "object",
+      "description": "OCI data connection secret configuration",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Create OCI data connection secret",
+          "default": true
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the secret",
+          "minLength": 1
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name for the connection"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the connection"
+        },
+        "uri": {
+          "type": "string",
+          "description": "Base64 encoded URI (auto-encoded from model.storageUri if empty)"
+        }
+      },
+      "required": ["create"],
+      "additionalProperties": false
+    },
+    "labels": {
+      "type": "object",
+      "description": "OpenDataHub labels",
+      "properties": {
+        "dashboard": {
+          "type": "boolean",
+          "description": "Enable OpenDataHub dashboard integration",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["model", "servingRuntime", "inferenceService"],
+  "additionalProperties": false
+}

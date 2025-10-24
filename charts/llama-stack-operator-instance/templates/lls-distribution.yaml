@@ -1,0 +1,73 @@
+apiVersion: llamastack.io/v1alpha1
+kind: LlamaStackDistribution
+metadata:
+  name: llama-stack
+  labels:
+    {{- include "llama-stack-operator-instance.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  server:
+    containerSpec:
+      command:
+        - /bin/sh
+        - '-c'
+        - llama stack run /etc/llama-stack/run.yaml
+      env:
+        {{- if .Values.localVllm.enabled }}
+        - name: MODEL_NAME
+          value: {{ .Values.MODEL_NAME | quote }}
+        - name: MODEL_URL
+          value: {{ .Values.MODEL_URL | quote }}
+        {{- end }}
+        - name: LLAMA_STACK_CONFIG_DIR
+          value: /opt/app-root/src/.llama/distributions/{{ .Values.distribution.imageName }}
+        {{- if and .Values.rag.enabled .Values.rag.milvus.remote }}
+        - name: MILVUS_ENDPOINT
+          value: "http://{{ .Values.rag.milvus.service }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.rag.milvus.port }}"
+        - name: MILVUS_TOKEN
+          value: {{ .Values.rag.milvus.token | quote }}
+        {{- end }}
+        {{- if .Values.maas.enabled }}
+        - name: INFERENCE_MODEL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.maas.secretName }}
+              key: INFERENCE_MODEL
+              optional: true
+        - name: VLLM_MAX_TOKENS
+          value: {{ .Values.maas.maxTokens | quote }}
+        - name: VLLM_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.maas.secretName }}
+              key: VLLM_URL
+              optional: true
+        - name: VLLM_TLS_VERIFY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.maas.secretName }}
+              key: VLLM_TLS_VERIFY
+              optional: true
+        - name: VLLM_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.maas.secretName }}
+              key: VLLM_API_TOKEN
+              optional: true
+        {{- end }}
+        {{- if .Values.telemetry.enabled }}
+        - name: TELEMETRY_SINKS
+          value: 'console, sqlite, otel_trace'
+        - name: OTEL_TRACE_ENDPOINT
+          value: 'http://otel-collector-collector.observability-hub.svc.cluster.local:4318/v1/traces'
+        - name: OTEL_METRIC_ENDPOINT
+          value: 'http://otel-collector-collector.observability-hub.svc.cluster.local:4318/v1/metrics'
+        - name: OTEL_SERVICE_NAME
+          value: llamastack
+        {{- end }}
+      name: llama-stack
+      port: 8321
+    distribution:
+      name: {{ .Values.distribution.name }}
+    userConfig:
+      configMapName: llama-stack-config

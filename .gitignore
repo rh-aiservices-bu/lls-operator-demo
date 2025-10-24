@@ -1,2 +1,7 @@
 CLAUDE.md
 .claude*
+
+# Helm dependency charts (rebuilt from Chart.lock)
+charts/*/charts/
+*.tgz
+tests/

@@ -1,0 +1,19 @@
+{{- if .Values.dataConnection.create }}
+kind: Secret
+apiVersion: v1
+metadata:
+  name: {{ .Values.dataConnection.name }}
+  labels:
+    {{- include "llama-guard.labels" . | nindent 4 }}
+  annotations:
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/description: {{ .Values.dataConnection.description | quote }}
+    openshift.io/display-name: {{ .Values.dataConnection.displayName }}
+data:
+  {{- if .Values.dataConnection.uri }}
+  URI: {{ .Values.dataConnection.uri }}
+  {{- else }}
+  URI: {{ .Values.model.storageUri | b64enc }}
+  {{- end }}
+type: Opaque
+{{- end }}

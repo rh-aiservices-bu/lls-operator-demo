@@ -1,0 +1,12 @@
+apiVersion: v2
+name: slack-mcp
+description: Slack MCP Server - Model Context Protocol server for Slack integration
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - mcp
+  - model-context-protocol
+  - slack
+maintainers:
+  - name: Red Hat AI BU

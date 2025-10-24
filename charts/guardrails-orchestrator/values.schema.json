@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Guardrails Orchestrator Helm Chart Values",
+  "description": "JSON Schema for Guardrails Orchestrator Helm chart values",
+  "type": "object",
+  "properties": {
+    "orchestrator_gateway": {
+      "description": "Configuration for the orchestrator gateway",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Enable or disable the guardrails gateway",
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["orchestrator_gateway"],
+  "additionalProperties": true
+}

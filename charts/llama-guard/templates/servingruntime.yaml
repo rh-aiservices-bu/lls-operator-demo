@@ -1,0 +1,58 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  annotations:
+    opendatahub.io/accelerator-name: ''
+    opendatahub.io/apiProtocol: REST
+    opendatahub.io/template-display-name: vLLM ServingRuntime for KServe - vLLM RHOAI 2.21
+    opendatahub.io/template-name: vllm-runtime-rhoai-221
+    openshift.io/display-name: {{ .Values.model.displayName }}
+  name: {{ .Values.model.name }}
+  labels:
+    {{- include "llama-guard.labels" . | nindent 4 }}
+spec:
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: {{ .Values.servingRuntime.port | quote }}
+  containers:
+    - args:
+        - '--port={{ .Values.servingRuntime.port }}'
+        - '--model=/mnt/models'
+        - '--served-model-name={{`{{.Name}}`}}'
+        {{- if .Values.servingRuntime.vllm.distributedExecutorBackend }}
+        - '--distributed-executor-backend={{ .Values.servingRuntime.vllm.distributedExecutorBackend }}'
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.maxModelLen }}
+        - '--max-model-len'
+        - {{ .Values.servingRuntime.vllm.maxModelLen | quote }}
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.dtype }}
+        - '--dtype={{ .Values.servingRuntime.vllm.dtype }}'
+        {{- end }}
+        {{- if .Values.servingRuntime.vllm.enableChunkedPrefill }}
+        - '--enable-chunked-prefill'
+        {{- end }}
+      command:
+        - python
+        - '-m'
+        - vllm.entrypoints.openai.api_server
+      env:
+        - name: HF_HOME
+          value: /tmp/hf_home
+      image: {{ .Values.servingRuntime.image }}
+      name: kserve-container
+      ports:
+        - containerPort: {{ .Values.servingRuntime.port }}
+          protocol: TCP
+      volumeMounts:
+        - mountPath: /dev/shm
+          name: shm
+  multiModel: false
+  supportedModelFormats:
+    - autoSelect: true
+      name: vLLM
+  volumes:
+    - emptyDir:
+        medium: Memory
+        sizeLimit: {{ .Values.servingRuntime.shm.sizeLimit }}
+      name: shm

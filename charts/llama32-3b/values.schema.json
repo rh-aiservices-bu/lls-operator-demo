@@ -1,0 +1,329 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Llama 3.2 3B Model Serving Helm Chart Values Schema",
+  "description": "Schema for validating values.yaml configuration for the Llama 3.2 3B model serving Helm chart",
+  "properties": {
+    "model": {
+      "type": "object",
+      "description": "Model configuration settings",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the model deployment",
+          "minLength": 1,
+          "default": "llama-32",
+          "examples": ["llama-32", "llama-3.2-3b"]
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name for the model",
+          "minLength": 1,
+          "default": "llama-32"
+        },
+        "servedModelName": {
+          "type": "string",
+          "description": "Name of the model as served by vLLM",
+          "minLength": 1,
+          "default": "llama32"
+        },
+        "storageUri": {
+          "type": "string",
+          "description": "OCI storage URI for the model",
+          "pattern": "^oci://",
+          "default": "oci://quay.io/redhat-ai-services/modelcar-catalog:llama-3.2-3b-instruct"
+        }
+      },
+      "required": ["name", "displayName", "servedModelName", "storageUri"],
+      "additionalProperties": false
+    },
+    "servingRuntime": {
+      "type": "object",
+      "description": "ServingRuntime configuration for vLLM",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Container image for vLLM runtime",
+          "minLength": 1,
+          "default": "quay.io/modh/vllm:rhoai-2.19-cuda"
+        },
+        "port": {
+          "type": "integer",
+          "description": "Port for the serving runtime",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 8080
+        },
+        "portName": {
+          "type": "string",
+          "description": "Name of the port",
+          "default": "http1"
+        },
+        "builtInAdapter": {
+          "type": "object",
+          "description": "Built-in adapter configuration",
+          "properties": {
+            "modelLoadingTimeoutMillis": {
+              "type": "integer",
+              "description": "Model loading timeout in milliseconds",
+              "minimum": 1000,
+              "default": 90000
+            }
+          },
+          "additionalProperties": false
+        },
+        "vllm": {
+          "type": "object",
+          "description": "vLLM-specific configuration",
+          "properties": {
+            "dtype": {
+              "type": "string",
+              "description": "Data type for model weights",
+              "enum": ["half", "float16", "bfloat16", "float32", "auto"],
+              "default": "half"
+            },
+            "gpuMemoryUtilization": {
+              "type": "string",
+              "description": "GPU memory utilization (0.0-1.0)",
+              "pattern": "^0\\.(0*[1-9][0-9]*|[1-9][0-9]*)$|^1\\.0*$",
+              "default": "0.95"
+            },
+            "maxModelLen": {
+              "type": "string",
+              "description": "Maximum model context length",
+              "pattern": "^[0-9]+$",
+              "default": "20000"
+            },
+            "enableAutoToolChoice": {
+              "type": "boolean",
+              "description": "Enable automatic tool choice",
+              "default": true
+            },
+            "enableChunkedPrefill": {
+              "type": "boolean",
+              "description": "Enable chunked prefill for better throughput",
+              "default": true
+            },
+            "toolCallParser": {
+              "type": "string",
+              "description": "Tool call parser to use",
+              "default": "llama3_json"
+            },
+            "chatTemplate": {
+              "type": "string",
+              "description": "Path to chat template file",
+              "default": "/app/data/template/tool_chat_template_llama3.2_json.jinja"
+            }
+          },
+          "additionalProperties": false
+        },
+        "env": {
+          "type": "array",
+          "description": "Environment variables for the runtime container",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "value"]
+          }
+        },
+        "shm": {
+          "type": "object",
+          "description": "Shared memory configuration",
+          "properties": {
+            "sizeLimit": {
+              "type": "string",
+              "description": "Shared memory size limit",
+              "pattern": "^[0-9]+(Mi|Gi)$",
+              "default": "2Gi"
+            }
+          },
+          "required": ["sizeLimit"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["image", "port"],
+      "additionalProperties": false
+    },
+    "inferenceService": {
+      "type": "object",
+      "description": "InferenceService configuration",
+      "properties": {
+        "minReplicas": {
+          "type": "integer",
+          "description": "Minimum number of replicas (0 for scale-to-zero)",
+          "minimum": 0,
+          "default": 0
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "default": 1
+        },
+        "modelFormat": {
+          "type": "string",
+          "description": "Model format",
+          "enum": ["pytorch", "vLLM", "onnx", "tensorflow"],
+          "default": "pytorch"
+        },
+        "modelArgs": {
+          "type": "array",
+          "description": "Additional model arguments",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource requirements",
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(m|)$"
+                },
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$"
+                },
+                "nvidia.com/gpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                }
+              }
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(m|)$"
+                },
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(Mi|Gi)$"
+                },
+                "nvidia.com/gpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                }
+              }
+            }
+          }
+        },
+        "buCluster": {
+          "type": "boolean",
+          "description": "Enable BU cluster specific configuration (Tesla-T4-PRIVATE GPUs)",
+          "default": false
+        },
+        "tolerations": {
+          "type": "array",
+          "description": "Pod tolerations for GPU scheduling",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string",
+                "enum": ["Equal", "Exists"]
+              },
+              "value": {
+                "type": "string"
+              },
+              "effect": {
+                "type": "string",
+                "enum": ["NoSchedule", "PreferNoSchedule", "NoExecute"]
+              }
+            }
+          }
+        }
+      },
+      "required": ["minReplicas", "maxReplicas", "modelFormat"],
+      "additionalProperties": false
+    },
+    "dataConnection": {
+      "type": "object",
+      "description": "OCI data connection secret configuration",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Create OCI data connection secret",
+          "default": false
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the secret",
+          "minLength": 1
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name for the connection"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the connection"
+        },
+        "uri": {
+          "type": "string",
+          "description": "Base64 encoded URI (auto-encoded from model.storageUri if empty)"
+        }
+      },
+      "required": ["create"],
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "description": "OpenShift Route configuration",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Create OpenShift Route",
+          "default": false
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "termination": {
+              "type": "string",
+              "enum": ["edge", "passthrough", "reencrypt"],
+              "default": "edge"
+            },
+            "insecureEdgeTerminationPolicy": {
+              "type": "string",
+              "enum": ["Redirect", "Allow", "None"],
+              "default": "Redirect"
+            }
+          }
+        }
+      },
+      "required": ["create"],
+      "additionalProperties": false
+    },
+    "labels": {
+      "type": "object",
+      "description": "OpenDataHub labels",
+      "properties": {
+        "dashboard": {
+          "type": "boolean",
+          "description": "Enable OpenDataHub dashboard integration",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["model", "servingRuntime", "inferenceService"],
+  "additionalProperties": false
+}
