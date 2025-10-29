@@ -62,3 +62,15 @@ mcpServers:
     service: "ocp-mcp-server"
     namespace: "llama-serve"
     port: 8000
+
+# OpenShift Route configuration
+route:
+  enabled: true
+  annotations: {}
+  host: ""  # If empty, OpenShift will auto-generate the host
+  serviceName: "llama-stack-service"  # Service name created by LlamaStackDistribution operator
+  servicePort: "http"  # Port name or number
+  tls:
+    enabled: true
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

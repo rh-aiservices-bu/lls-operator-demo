@@ -335,6 +335,68 @@
       },
       "required": ["weather", "slack", "openshift"],
       "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "description": "OpenShift Route configuration for exposing the Llama Stack service",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable OpenShift Route creation",
+          "default": true
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Additional annotations for the Route",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "host": {
+          "type": "string",
+          "description": "Custom hostname for the route. If empty, OpenShift will auto-generate one",
+          "default": ""
+        },
+        "serviceName": {
+          "type": "string",
+          "description": "Name of the service to expose (created by LlamaStackDistribution operator)",
+          "minLength": 1,
+          "default": "llama-stack-service"
+        },
+        "servicePort": {
+          "type": "string",
+          "description": "Service port name or number to target",
+          "default": "http"
+        },
+        "tls": {
+          "type": "object",
+          "description": "TLS configuration for the route",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable TLS for the route",
+              "default": true
+            },
+            "termination": {
+              "type": "string",
+              "description": "TLS termination type",
+              "enum": ["edge", "passthrough", "reencrypt"],
+              "default": "edge"
+            },
+            "insecureEdgeTerminationPolicy": {
+              "type": "string",
+              "description": "Policy for handling insecure traffic",
+              "enum": ["Redirect", "Allow", "None", ""],
+              "default": "Redirect"
+            }
+          },
+          "required": ["enabled", "termination"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["enabled", "annotations", "host", "serviceName", "servicePort", "tls"],
+      "additionalProperties": false
     }
   },
   "required": [
@@ -349,7 +411,8 @@
     "telemetry",
     "scoring",
     "maas",
-    "mcpServers"
+    "mcpServers",
+    "route"
   ],
   "additionalProperties": false
 }
